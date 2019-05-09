@@ -67,10 +67,10 @@ def initV():
     
 
 
-def reward(state):
+def Reward(state):
     theta=state[0]
-    if(theta==3):#most balanced
-        return 2
+    if(theta==3 or theta==2):#most balanced
+        return 1.5
     return 1
 
 def getAction(Q, state):
@@ -99,15 +99,21 @@ def valueIteration(learningRate, discountRate, explorationRate, episodes):
     Q=initQ() #Q-table
     lr=learningRate #learning rate
     dr=discountRate #discount rate
+    er=explorationRate
     tsTotal=0 #total number of timesteps
     completed=0 #number of times to 100 steps
     env = gym.make('CartPole-v0')
     for i_episode in range(episodes):
         observation = env.reset()
+        er=explorationRate-explorationRate*(i_episode/episodes)
         for t in range(200):
             env.render()
             state=discretize(observation)
-            action = getAction(Q, state)
+            explore=random.randint(0,100)
+            if(explore < er*100 and i_episode<30): #get random action
+                action=random.randint(0,1)
+            else: #get action normally
+                action = getAction(Q, state)
             observation, reward, done, info = env.step(action)
             newState=discretize(observation)
             update=lr*(reward+dr*maxQ(newState,Q)-Q[state]) #update Q-value
@@ -115,7 +121,7 @@ def valueIteration(learningRate, discountRate, explorationRate, episodes):
                 Q[state]=Q[state]+update
             else: #right
                 Q[state]=Q[state]-update
-            if(i_episode > 30): #we only start counting once the agent has learned something
+            if(i_episode > 180): #we only start counting once the agent has learned something
                 tsTotal=tsTotal+1
             if done:
                 #print("Episode finished after {} timesteps".format(t+1))
@@ -124,17 +130,28 @@ def valueIteration(learningRate, discountRate, explorationRate, episodes):
     #print("timeSteps="+str(tsTotal)+" 100s="+str(completed))
     avgTime=tsTotal/20
     env.close()
+    print(Q)
     return avgTime
 
-def main():
-    learningRates=[0.0,0.01,0.05,0.1,0.25,0.5]
+
+def main1():
+    learningRates=[0.1,0.2,0.3]
+    explorationRates=[0.0,0.1,0.2]
     total=0 
     for lr in learningRates:
-        total=0
-        for i in range(3):
-            total=total+valueIteration(lr,1.0,1.0,50)
-        avg=total/3
-        print("Learning Rate:"+str(lr)+" Average Steps:"+str(avg))
+        for er in explorationRates:
+            total=0
+            for i in range(3):
+                total=total+valueIteration(lr,1.0,er,50)
+            avg=total/3
+            print("Learning Rate:"+str(lr)+" Exploration Rate:"+str(er)+" Average Steps:"+str(avg))
+
+def main():
+    learningRate=0.1
+    explorationRate=0.0
+    time=valueIteration(learningRate,1.0, explorationRate,50)
+    print(time)
+
     
 
 
