@@ -53,11 +53,11 @@ def discretize(observation):
     velocity=observation[1] #[-0.07,0.07] 
     normP=((position+0.3)/1.8+0.5)*pBuckets 
     normV=(velocity/0.14+0.5)*vBuckets
-    if(normP > pBuckets):
+    if(normP >= pBuckets):
         normT=pBuckets-1
     if(normP < 0):
         normP=0
-    if(normV > vBuckets):
+    if(normV >= vBuckets):
         normV=vBuckets-1
     if(normV < 0):
         normV=0
@@ -151,6 +151,9 @@ def valueIteration(learningRate, discountRate, explorationRate, episodes):
         #er=get_exploration_rate(i_episode)
         for t in range(maxSteps):
             env.render()
+            x=observation[0]
+            if(x >= env.goal_position): #SUCCESS
+                print("The car made it after "+str(i_episode)+" episodes in "+str(t)+" time steps") 
             state=discretize(observation)
             explore=random.randint(0,100)
             action = getAction(Q, state)
@@ -164,12 +167,7 @@ def valueIteration(learningRate, discountRate, explorationRate, episodes):
                 Q[(state,action)]=Q[(state,action)]+update
             else: #right
                 Q[(state,action)]=Q[(state,action)]-update
-           # if(Q[state] > 1):
-            #    Q[state]=1.0
-           # if(Q[state] < 0):
-            #    Q[state]=0.0
-            if(i_episode > 80): #we only start counting once the agent has learned something
-                tsTotal=tsTotal+1
+
         print("minP:"+str(minP)+" maxP:"+str(maxP)+" minV:"+str(minV)+" maxV:"+str(maxV))
             
     #print(Q)
